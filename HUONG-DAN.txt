@@ -1,0 +1,3 @@
+WEBSITE VIETTEL ĐỒNG NAI
+Xem README.md để cài đặt, khởi tạo Neon, cấu hình Vercel Blob/Resend và chạy trang /admin.
+File ZIP trong downloads là bản phân phối cũ. Dùng mã nguồn hiện tại cho triển khai Vercel.

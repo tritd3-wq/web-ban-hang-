@@ -1,0 +1,38 @@
+#ftthPricing {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  color: #20212b;
+  background: #fff;
+}
+#ftthPricing[open] { display: flex; flex-direction: column; }
+#ftthPricing > header {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px clamp(12px, 4vw, 48px);
+  border-bottom: 1px solid #e6e6e6;
+  background: #fff;
+}
+#ftthPricing h2 { margin: 0; font-size: clamp(19px, 3vw, 30px); line-height: 1.2; }
+#ftthPricing button { cursor: pointer; font: inherit; }
+#ftthPricing header .ftth-close { display: grid; place-items: center; padding: 0; line-height: 1; color: #fff; flex: 0 0 44px; height: 44px; border: 1px solid #ddd; border-radius: 8px; background: #ee0033; font-size: 28px; }
+#ftthPricing .ftth-pricing-body { overflow: auto; overscroll-behavior: contain; padding: 16px clamp(12px, 4vw, 48px); }
+#ftthPricing section { margin-bottom: 24px; }
+#ftthPricing h3 { margin: 0 0 10px; }
+#ftthPricing .ftth-table-scroll { overflow-x: auto; }
+#ftthPricing table { width: 100%; min-width: 610px; border-collapse: collapse; }
+#ftthPricing th, #ftthPricing td { padding: 10px; text-align: left; border: 1px solid #e6e6e6; }
+#ftthPricing thead { background: #ee0033; color: white; }
+#ftthPricing tbody tr:nth-child(even) { background: #fff5f7; }
+#ftthPricing .ftth-plan-price { color: #c8002b; font-weight: 700; white-space: nowrap; }
+#ftthPricing td button { border: 0; border-radius: 8px; background: #ee0033; color: white; padding: 8px 12px; min-height: 44px; white-space: nowrap; }
+#ftthPricing .ftth-vat-note { color: #c8002b; font-size: 18px; font-weight: 700; }

@@ -1,0 +1,8 @@
+@font-face{font-family:'FS PF BeauSans Pro';font-style:normal;font-weight:400;font-display:swap;src:url('beausans-bbook.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:normal;font-weight:300;font-display:swap;src:url('beausans-light.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:normal;font-weight:600;font-display:swap;src:url('beausans-semibold.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:normal;font-weight:700;font-display:swap;src:url('beausans-bold.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:normal;font-weight:900;font-display:swap;src:url('beausans-black.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:italic;font-weight:400;font-display:swap;src:url('beausans-bbookitalic.woff') format('woff')}
+@font-face{font-family:'FS PF BeauSans Pro';font-style:italic;font-weight:700;font-display:swap;src:url('beausans-bolditalic.woff') format('woff')}
+:where(button,input,select,textarea,optgroup){font-family:inherit}
