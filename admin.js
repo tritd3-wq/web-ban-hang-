@@ -95,6 +95,9 @@ function inputFor(key, record) {
   return label;
 }
 
+const maxOriginalImageBytes = 10_000_000;
+const maxUploadImageBytes = 3 * 1024 * 1024;
+
 async function compressUpload(file) {
   if (file.size <= 256 * 1024 || typeof createImageBitmap !== 'function') return file;
   let image;
@@ -106,7 +109,10 @@ async function compressUpload(file) {
     canvas.width = Math.max(1, Math.round(image.width * scale));
     canvas.height = Math.max(1, Math.round(image.height * scale));
     canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-    const webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.92));
+    let webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.92));
+    if (webp?.type === 'image/webp' && webp.size > maxUploadImageBytes) {
+      webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.8));
+    }
     if (webp?.type === 'image/webp' && webp.size < file.size) return webp;
   } catch {
     // The server can still validate and process the original file.
@@ -137,13 +143,16 @@ function uploadControl(keys, form) {
   const upload = button('Tải ảnh lên', async () => {
     if (pending) return;
     const chosen = file.files[0];
-    if (!chosen || chosen.size > 3 * 1024 * 1024) return report('Chọn ảnh JPG, PNG hoặc WebP tối đa 3 MiB.', true);
+    if (!chosen || chosen.size > maxOriginalImageBytes) return report('Chọn ảnh JPG, PNG hoặc WebP tối đa 10 MB.', true);
     pending = upload.disabled = file.disabled = true;
     report('Đang chuẩn bị ảnh…');
     const controller = new AbortController();
     let timeout;
     try {
       const image = await compressUpload(chosen);
+      if (image.size > maxUploadImageBytes) {
+        throw new Error('Trình duyệt chưa nén được ảnh này đủ nhỏ để tải lên. Hãy thử giảm kích thước ảnh hoặc đổi sang JPG.');
+      }
       report('Đang tải ảnh lên…');
       timeout = setTimeout(() => controller.abort(), 35_000);
       const data = await request('/api/admin?action=upload&banner=' + (keys.length === 2 ? '1' : '0'), {
@@ -170,7 +179,9 @@ function uploadControl(keys, form) {
   form.elements.namedItem(keys[0]).addEventListener('change', refresh);
   line.append(file, upload, img);
   area.append(line);
-  if (keys.length === 2) area.append(el('p', 'upload-note', 'Ảnh tải lên được chuyển thành WebP cho hai kích thước màn hình.'));
+  area.append(el('p', 'upload-note', keys.length === 2
+    ? 'Tối đa 10 MB. Poster được chuyển thành WebP cho hai kích thước màn hình.'
+    : 'JPG, PNG hoặc WebP, tối đa 10 MB.'));
   refresh();
   return area;
 }
