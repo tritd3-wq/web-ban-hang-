@@ -1,8 +1,8 @@
 import { requireAdmin, logIn, logOut } from '../server/auth.js';
 import { allContent, db } from '../server/db.js';
 import { prepareAdminEdit } from '../server/content.js';
-import { body, HttpError, json, method, route, sameOrigin } from '../server/http.js';
-import { uploadImages } from '../server/images.js';
+import { binaryBody, body, HttpError, json, method, route, sameOrigin } from '../server/http.js';
+import { maxImageBytes, uploadImages } from '../server/images.js';
 import { leadStatuses } from '../site-model.js';
 
 export default route(async (req, res) => {
@@ -34,6 +34,10 @@ export default route(async (req, res) => {
     return json(res, 200, saved);
   }
   if (req.method === 'POST' && action === 'upload') {
+    if (req.headers['content-type'] === 'application/octet-stream') {
+      const image = await binaryBody(req, maxImageBytes);
+      return json(res, 201, await uploadImages(image, query.get('banner') === '1'));
+    }
     const { image, banner } = await body(req, 4_250_000);
     return json(res, 201, await uploadImages(image, banner === true));
   }

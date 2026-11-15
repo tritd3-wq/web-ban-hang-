@@ -102,6 +102,9 @@ function uploadControl(keys, form) {
   file.type = 'file';
   file.accept = 'image/jpeg,image/png,image/webp';
   file.setAttribute('aria-label', keys.length === 2 ? 'Chọn ảnh poster' : 'Chọn ảnh ' + labels[keys[0]]);
+  file.onchange = () => {
+    file.setCustomValidity(file.files.length ? 'Bấm Tải ảnh lên trước khi lưu và xuất bản.' : '');
+  };
   const img = el('img');
   img.alt = 'Xem trước ảnh ' + labels[keys[0]];
   const refresh = () => {
@@ -114,24 +117,30 @@ function uploadControl(keys, form) {
     if (pending) return;
     const chosen = file.files[0];
     if (!chosen || chosen.size > 3 * 1024 * 1024) return report('Chọn ảnh JPG, PNG hoặc WebP tối đa 3 MiB.', true);
-    pending = upload.disabled = true;
-    report('Đang tải và chuyển ảnh sang WebP…');
+    pending = upload.disabled = file.disabled = true;
+    report('Đang xử lý và tải ảnh lên…');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 35_000);
     try {
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(chosen);
+      const data = await request('/api/admin?action=upload&banner=' + (keys.length === 2 ? '1' : '0'), {
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: chosen, signal: controller.signal
       });
-      const data = await sendJson('/api/admin?action=upload', { image: dataUrl.split(',')[1], banner: keys.length === 2 });
-      for (const key of keys) form.elements.namedItem(key).value = data[key] || data.url;
+      const urls = keys.length === 2 ? [data.desktop, data.mobile] : [data.url];
+      if (urls.some(url => typeof url !== 'string' || !url.startsWith('https://'))) {
+        throw new Error('Máy chủ chưa trả về link ảnh. Vui lòng thử tải lại.');
+      }
+      for (const [index, key] of keys.entries()) form.elements.namedItem(key).value = urls[index];
+      file.value = '';
+      file.setCustomValidity('');
       refresh();
       markDirty();
       report('Đã tải ảnh. Bấm lưu để xuất bản.');
     } catch (error) {
-      fail(error);
+      if (controller.signal.aborted) report('Tải ảnh quá lâu. Vui lòng thử lại.', true);
+      else fail(error);
     } finally {
-      pending = upload.disabled = false;
+      clearTimeout(timeout);
+      pending = upload.disabled = file.disabled = false;
     }
   }, true);
   form.elements.namedItem(keys[0]).addEventListener('change', refresh);

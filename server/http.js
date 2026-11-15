@@ -40,6 +40,25 @@ export function sameOrigin(req) {
   }
 }
 
+async function readBytes(req, max) {
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of req) {
+    size += chunk.length;
+    if (size > max) throw new HttpError(413, 'Dữ liệu vượt dung lượng cho phép.');
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+}
+
+export async function binaryBody(req, max) {
+  if (Number(req.headers['content-length']) > max) throw new HttpError(413, 'Ảnh tối đa 3 MiB.');
+  const data = req.body ?? await readBytes(req, max);
+  if (!Buffer.isBuffer(data)) throw new HttpError(400, 'Dữ liệu ảnh không hợp lệ.');
+  if (data.length > max) throw new HttpError(413, 'Ảnh tối đa 3 MiB.');
+  return data;
+}
+
 export async function body(req, max = 256_000) {
   if (!/^application\/json(?:\s*;|$)/i.test(req.headers['content-type'] || '')) {
     throw new HttpError(415, 'Định dạng yêu cầu không hỗ trợ.');
@@ -47,14 +66,7 @@ export async function body(req, max = 256_000) {
   let data;
   try { data = req.body; } catch { throw new HttpError(400, 'JSON không hợp lệ.'); }
   if (data === undefined) {
-    const chunks = [];
-    let size = 0;
-    for await (const chunk of req) {
-      size += chunk.length;
-      if (size > max) throw new HttpError(413, 'Dữ liệu vượt dung lượng cho phép.');
-      chunks.push(chunk);
-    }
-    data = Buffer.concat(chunks).toString('utf8');
+    data = (await readBytes(req, max)).toString('utf8');
   }
   if (Buffer.byteLength(typeof data === 'string' ? data : JSON.stringify(data ?? null)) > max) {
     throw new HttpError(413, 'Dữ liệu vượt dung lượng cho phép.');
