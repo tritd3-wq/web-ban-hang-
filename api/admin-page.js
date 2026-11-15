@@ -12,7 +12,7 @@ export default route(async (req, res) => {
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; img-src 'self' https: data: blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self' https://vercel.com; img-src 'self' https: data: blob:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
   res.end(head + (admin ? `<body><header class="admin-top"><strong>Viettel Đồng Nai <span>Quản trị website</span></strong>
     <div><a href="/" target="_blank" rel="noopener">Xem website ↗</a> <button id="logout" class="secondary" type="button">Đăng xuất</button></div></header>
     <div class="admin-layout"><nav id="adminNav" aria-label="Mục quản trị"></nav>

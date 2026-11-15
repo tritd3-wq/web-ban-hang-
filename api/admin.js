@@ -2,7 +2,7 @@ import { requireAdmin, logIn, logOut } from '../server/auth.js';
 import { allContent, db } from '../server/db.js';
 import { prepareAdminEdit } from '../server/content.js';
 import { binaryBody, body, HttpError, json, method, route, sameOrigin } from '../server/http.js';
-import { maxImageBytes, uploadImages } from '../server/images.js';
+import { createImageUploadLinks, maxImageBytes, uploadImages } from '../server/images.js';
 import { leadStatuses } from '../site-model.js';
 
 export default route(async (req, res) => {
@@ -32,6 +32,10 @@ export default route(async (req, res) => {
         revision = revision + 1 WHERE section = ${storage} AND revision = ${revision} RETURNING section, data, revision`;
     if (!saved) throw new HttpError(409, 'Nội dung đã thay đổi ở phiên khác. Tải lại trước khi lưu.');
     return json(res, 200, saved);
+  }
+  if (req.method === 'POST' && action === 'upload-links') {
+    const { banner } = await body(req, 1024);
+    return json(res, 200, await createImageUploadLinks(banner === true));
   }
   if (req.method === 'POST' && action === 'upload') {
     if (req.headers['content-type'] === 'application/octet-stream') {

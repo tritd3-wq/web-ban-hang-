@@ -1,8 +1,30 @@
-import { put, del } from '@vercel/blob';
+import { randomUUID } from 'node:crypto';
+import { put, del, issueSignedToken, presignUrl } from '@vercel/blob';
 import sharp from 'sharp';
 import { HttpError } from './http.js';
 
 export const maxImageBytes = 3 * 1024 * 1024;
+
+export async function createImageUploadLinks(banner) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) throw new HttpError(503, 'Chưa cấu hình Vercel Blob.');
+  const id = randomUUID();
+  const paths = banner ? ['banners/' + id + '-desktop.webp', 'banners/' + id + '-mobile.webp'] : ['images/' + id + '.webp'];
+  const constraints = { allowedContentTypes: ['image/webp'], maximumSizeInBytes: maxImageBytes, validUntil: Date.now() + 120_000 };
+  const abortSignal = AbortSignal.timeout(8000);
+  try {
+    const links = await Promise.all(paths.map(async pathname => {
+      const token = await issueSignedToken({ pathname, operations: ['put'], abortSignal, ...constraints });
+      const { presignedUrl } = await presignUrl(token, {
+        pathname, operation: 'put', access: 'public', allowOverwrite: false, ...constraints
+      });
+      return presignedUrl;
+    }));
+    return { links };
+  } catch (error) {
+    console.error('Blob upload link failed', error.name);
+    throw new HttpError(502, 'Không tạo được link tải ảnh trên Vercel Blob. Vui lòng thử lại.');
+  }
+}
 
 async function makeWebp(input, widths) {
   const valid = Buffer.isBuffer(input) || (typeof input === 'string' && /^[A-Za-z0-9+/]+={0,2}$/.test(input));

@@ -98,28 +98,33 @@ function inputFor(key, record) {
 const maxOriginalImageBytes = 10_000_000;
 const maxUploadImageBytes = 3 * 1024 * 1024;
 
-async function compressUpload(file) {
-  if (file.size <= 256 * 1024 || typeof createImageBitmap !== 'function') return file;
+async function prepareUploadImages(file, banner) {
   let image;
   try {
     image = await createImageBitmap(file);
-    if (image.width * image.height > 24_000_000) return file;
-    const scale = Math.min(1, 1600 / image.width, 2400 / image.height);
-    const canvas = el('canvas');
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
-    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-    let webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.92));
-    if (webp?.type === 'image/webp' && webp.size > maxUploadImageBytes) {
-      webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.8));
-    }
-    if (webp?.type === 'image/webp' && webp.size < file.size) return webp;
   } catch {
-    // The server can still validate and process the original file.
-  } finally {
-    image?.close();
+    throw new Error('Không đọc được ảnh. Vui lòng chọn file JPG, PNG hoặc WebP hợp lệ.');
   }
-  return file;
+  try {
+    if (image.width * image.height > 24_000_000) throw new Error('Ảnh tối đa 24 megapixel.');
+    const sizes = banner ? [1600, 768] : [1600];
+    return await Promise.all(sizes.map(async width => {
+      const scale = Math.min(1, width / image.width, 2400 / image.height);
+      const canvas = el('canvas');
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      const encode = quality => new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+      let webp = await encode(0.9);
+      if (webp?.size > maxUploadImageBytes) webp = await encode(0.8);
+      if (webp?.type !== 'image/webp' || webp.size > maxUploadImageBytes) {
+        throw new Error('Không tạo được ảnh WebP đủ nhỏ. Vui lòng thử ảnh khác.');
+      }
+      return webp;
+    }));
+  } finally {
+    image.close();
+  }
 }
 
 function uploadControl(keys, form) {
@@ -148,20 +153,32 @@ function uploadControl(keys, form) {
     report('Đang chuẩn bị ảnh…');
     const controller = new AbortController();
     let timeout;
+    let stage = 'chuẩn bị ảnh';
     try {
-      const image = await compressUpload(chosen);
-      if (image.size > maxUploadImageBytes) {
-        throw new Error('Trình duyệt chưa nén được ảnh này đủ nhỏ để tải lên. Hãy thử giảm kích thước ảnh hoặc đổi sang JPG.');
-      }
-      report('Đang tải ảnh lên…');
+      const banner = keys.length === 2;
+      const images = await prepareUploadImages(chosen, banner);
+      stage = 'lấy link tải ảnh';
+      report('Đang lấy link tải ảnh…');
       timeout = setTimeout(() => controller.abort(), 35_000);
-      const data = await request('/api/admin?action=upload&banner=' + (keys.length === 2 ? '1' : '0'), {
-        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: image, signal: controller.signal
+      const { links } = await request('/api/admin?action=upload-links', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ banner }), signal: controller.signal
       });
-      const urls = keys.length === 2 ? [data.desktop, data.mobile] : [data.url];
-      if (urls.some(url => typeof url !== 'string' || !url.startsWith('https://'))) {
-        throw new Error('Máy chủ chưa trả về link ảnh. Vui lòng thử tải lại.');
+      if (!Array.isArray(links) || links.length !== images.length) {
+        throw new Error('Máy chủ chưa trả về đủ link tải ảnh. Vui lòng thử lại.');
       }
+      stage = 'tải ảnh lên Vercel Blob';
+      report('Đang tải ảnh lên Vercel Blob…');
+      const urls = await Promise.all(links.map(async (link, index) => {
+        const data = await request(link, {
+          method: 'PUT', headers: { 'x-vercel-blob-access': 'public' },
+          body: images[index], credentials: 'omit', referrerPolicy: 'no-referrer', signal: controller.signal
+        });
+        if (typeof data.url !== 'string' || !data.url.startsWith('https://')) {
+          throw new Error('Vercel Blob chưa trả về link ảnh. Vui lòng thử lại.');
+        }
+        return data.url;
+      }));
       for (const [index, key] of keys.entries()) form.elements.namedItem(key).value = urls[index];
       file.value = '';
       file.setCustomValidity('');
@@ -169,8 +186,11 @@ function uploadControl(keys, form) {
       markDirty();
       report('Đã tải ảnh. Bấm lưu để xuất bản.');
     } catch (error) {
-      if (controller.signal.aborted) report('Tải ảnh quá lâu. Vui lòng thử lại.', true);
-      else fail(error);
+      if (controller.signal.aborted) report('Quá thời gian ' + stage + '. Vui lòng thử lại.', true);
+      else {
+        controller.abort();
+        fail(error);
+      }
     } finally {
       clearTimeout(timeout);
       pending = upload.disabled = file.disabled = false;

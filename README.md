@@ -7,7 +7,7 @@ Landing page hiện có dùng HTML/CSS/JS và Vercel Functions (Node.js 22). Neo
 1. Cài Node.js 22, chạy `npm ci`.
 2. Tạo Neon Postgres và đặt connection string vào `DATABASE_URL` trong `.env.local` theo [.env.example](.env.example). Chạy `npm run db:init`. Lệnh có thể chạy lại vì chỉ thêm mục nội dung còn thiếu.
 3. Tạo tên đăng nhập `ADMIN_USERNAME`. Sinh `ADMIN_PASSWORD_HASH` bằng `npm run admin:hash`. Gõ mật khẩu 12–200 ký tự trên terminal riêng, nhấn Enter rồi kết thúc stdin bằng Ctrl+Z và Enter trên Windows, hoặc Ctrl+D trên macOS/Linux. Chép **chuỗi hash** vào biến môi trường. Terminal có thể hiện ký tự nhập trong bước này.
-4. Tạo **Public** Blob store và nối với dự án Vercel. Đặt `BLOB_READ_WRITE_TOKEN` nếu chạy upload ở máy local. Admin nhận ảnh JPG, PNG hoặc WebP tối đa 10 MB và nén ảnh trước khi gửi. Banner được tạo WebP rộng tối đa 1600 px và 768 px, giữ tỷ lệ ảnh.
+4. Tạo **Public** Blob store và nối với dự án Vercel. Đặt `BLOB_READ_WRITE_TOKEN` nếu chạy upload ở máy local. Admin nhận ảnh JPG, PNG hoặc WebP tối đa 10 MB, tạo bản WebP rồi gửi thẳng lên Blob qua link tải có hạn. Banner được tạo WebP rộng tối đa 1600 px và 768 px, giữ tỷ lệ ảnh.
 5. Để gửi email, xác minh domain gửi trong Resend và đặt `RESEND_API_KEY`, `RESEND_FROM_EMAIL`. Khách nhận email xác nhận. Địa chỉ **Admin → Liên hệ → Email liên hệ** nhận email thông báo kèm thông tin khách điền.
 6. Chạy `npm run build`, rồi `npm run dev`. Mở `http://127.0.0.1:3000/` và `/admin`. Trang công khai có nội dung khởi tạo dự phòng khi Neon chưa kết nối. Form yêu cầu kết nối Neon.
 
