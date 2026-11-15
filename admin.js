@@ -1,9 +1,9 @@
 import { byId, cash, el, request, sendJson } from './ui.js';
 import { adminFields, emailStatuses, leadStatuses, planGroups } from './site-model.js';
+import { report } from './admin-toast.js';
 
 const nav = byId('adminNav');
 const host = byId('editor');
-const status = byId('adminStatus');
 const sections = {
   contact: 'Liên hệ', banners: 'Ảnh & poster', plans: 'Gói cước',
   leads: 'Yêu cầu tư vấn', faq: 'FAQ', video: 'Video'
@@ -27,10 +27,6 @@ let content, section, draft, selected, pending = false, dirty = false, listPage 
 let imageMode = 'banners', imageService = 'tendoo', videoService = 'tendoo';
 let renderSequence = 0;
 
-function report(message, error = false) {
-  status.textContent = message;
-  status.dataset.error = String(error);
-}
 function fail(error) {
   if (error.status === 401) location.replace('/admin');
   else report(error.message, true);

@@ -36,8 +36,15 @@ button:disabled { opacity: .55; cursor: default; }
 #adminNav button { text-align: left; border: 0; background: transparent; color: var(--ink); box-shadow: none; }
 #adminNav button[aria-current] { background: #ffe9ef; color: #a20027; }
 .admin-layout main { padding: 1.5rem clamp(1rem, 4vw, 3rem) 3rem; border-left: 1px solid var(--line); }
-#adminStatus { min-height: 1.2rem; color: var(--muted); margin: .45rem 0 .8rem; }
-#adminStatus[data-error="true"], #loginStatus { color: #a20027; }
+.admin-toast {
+  position: fixed; z-index: 10; inset: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) auto auto;
+  width: max-content; max-width: min(24rem, calc(100vw - 2rem)); margin: 0; padding: .85rem 1rem;
+  overflow-wrap: anywhere; background: #fff; color: var(--ink); border: 1px solid var(--line);
+  border-inline-start: 4px solid var(--red); border-radius: 9px; box-shadow: 0 6px 22px #22202a24;
+  pointer-events: none;
+}
+.admin-toast[data-error="true"] { color: #a20027; background: #fff2f5; }
+.admin-toast:empty { opacity: 0; }
 .panel, .login-card { border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: clamp(.9rem, 3vw, 1.4rem); }
 .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
 label { display: grid; gap: .3rem; font-weight: 700; min-width: 0; }
@@ -75,7 +82,6 @@ td select { min-width: 120px; }
 .login-card { width: min(100%, 420px); padding: 1.6rem; }
 .login-card .brand { margin: 1.2rem 0 .2rem; font-weight: 700; color: var(--red); }
 #login { display: grid; gap: .85rem; margin-top: 1rem; }
-#loginStatus { margin: 0; }
 @media (max-width: 760px) {
   .admin-layout { display: block; }
   #adminNav { flex-direction: row; overflow: auto; padding: .65rem 1rem; border-bottom: 1px solid var(--line); }
