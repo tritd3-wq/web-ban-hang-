@@ -1,6 +1,6 @@
 import { allContent, db } from '../server/db.js';
 import { body, clientIp, HttpError, json, limit, method, route, sameOrigin } from '../server/http.js';
-import { mailConfigured, sendConfirmation } from '../server/mail.js';
+import { mailConfigured, sendConfirmation, sendOwnerNotification } from '../server/mail.js';
 import { emailValid, phoneValid } from '../site-model.js';
 
 function field(value, max) {
@@ -54,7 +54,11 @@ export default route(async (req, res) => {
 
   let emailStatus = initialStatus;
   if (initialStatus === 'pending') {
-    const result = await sendConfirmation({ id, name, email, plan: plan?.name, products, hotline: content.contact.data.hotline });
+    const contact = content.contact.data;
+    const [result] = await Promise.all([
+      sendConfirmation({ id, name, email, plan: plan?.name, products, hotline: contact.hotline }),
+      sendOwnerNotification({ id, name, email, phone, company, needs, plan: plan?.name, products, ownerEmail: contact.email })
+    ]);
     emailStatus = result.status;
     await sql`UPDATE leads SET email_status = ${result.status}, email_id = ${result.emailId} WHERE id = ${id}`;
   }
