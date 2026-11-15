@@ -95,6 +95,27 @@ function inputFor(key, record) {
   return label;
 }
 
+async function compressUpload(file) {
+  if (file.size <= 256 * 1024 || typeof createImageBitmap !== 'function') return file;
+  let image;
+  try {
+    image = await createImageBitmap(file);
+    if (image.width * image.height > 24_000_000) return file;
+    const scale = Math.min(1, 1600 / image.width, 2400 / image.height);
+    const canvas = el('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    const webp = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', 0.92));
+    if (webp?.type === 'image/webp' && webp.size < file.size) return webp;
+  } catch {
+    // The server can still validate and process the original file.
+  } finally {
+    image?.close();
+  }
+  return file;
+}
+
 function uploadControl(keys, form) {
   const area = el('div', 'wide');
   const line = el('div', 'upload-box');
@@ -118,12 +139,15 @@ function uploadControl(keys, form) {
     const chosen = file.files[0];
     if (!chosen || chosen.size > 3 * 1024 * 1024) return report('Chọn ảnh JPG, PNG hoặc WebP tối đa 3 MiB.', true);
     pending = upload.disabled = file.disabled = true;
-    report('Đang xử lý và tải ảnh lên…');
+    report('Đang chuẩn bị ảnh…');
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 35_000);
+    let timeout;
     try {
+      const image = await compressUpload(chosen);
+      report('Đang tải ảnh lên…');
+      timeout = setTimeout(() => controller.abort(), 35_000);
       const data = await request('/api/admin?action=upload&banner=' + (keys.length === 2 ? '1' : '0'), {
-        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: chosen, signal: controller.signal
+        method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: image, signal: controller.signal
       });
       const urls = keys.length === 2 ? [data.desktop, data.mobile] : [data.url];
       if (urls.some(url => typeof url !== 'string' || !url.startsWith('https://'))) {
