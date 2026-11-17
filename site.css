@@ -4,3 +4,13 @@
 #register [role="status"], #scStatus { white-space: pre-line; }
 .site-fallback { position: relative; margin: 0; padding: 7px 18px; background: #fff1d5; color: #543700; text-align: center; }
 dialog .lead-bot { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.discover .discover-options { grid-template-rows: none; }
+.page-blocks { display: grid; gap: 20px; margin-block: 24px; }
+.page-block { padding: clamp(20px, 4vw, 40px); border-radius: 20px; background: #fff; }
+.page-block.has-image { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: center; }
+.page-block h2 { margin-top: 0; overflow-wrap: anywhere; }
+.page-block p { margin-bottom: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.page-block img { display: block; width: 100%; max-height: 360px; object-fit: contain; border-radius: 12px; }
+@media (max-width: 760px) {
+  .page-block.has-image { grid-template-columns: 1fr; }
+}

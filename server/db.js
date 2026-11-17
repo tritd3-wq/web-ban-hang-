@@ -1,7 +1,9 @@
 import { neon } from '@neondatabase/serverless';
 import defaults from '../site-defaults.js';
+import { pageVisibilityDefaults, serviceVideos } from '../site-model.js';
 
 let client;
+export const optionalSections = ['pageVisibility', 'pageBlocks', 'videos'];
 export function db() {
   if (!process.env.DATABASE_URL) throw new Error('Missing DATABASE_URL');
   client ??= neon(process.env.DATABASE_URL);
@@ -35,9 +37,17 @@ export async function initialize(sql = db()) {
 }
 
 export async function allContent() {
-  const rows = await db()`SELECT section, data, revision FROM site_content WHERE section = ANY(${Object.keys(defaults)}::text[])`;
+  const sections = [...Object.keys(defaults), ...optionalSections];
+  const rows = await db()`SELECT section, data, revision FROM site_content WHERE section = ANY(${sections}::text[])`;
   if (!Object.keys(defaults).every(section => rows.some(row => row.section === section))) {
     throw new Error('Run npm run db:init');
   }
-  return Object.fromEntries(rows.map(row => [row.section, row]));
+  const content = Object.fromEntries(rows.map(row => [row.section, row]));
+  const fallback = {
+    pageVisibility: pageVisibilityDefaults,
+    pageBlocks: [],
+    videos: serviceVideos(content.services.data)
+  };
+  for (const section of optionalSections) content[section] ??= { section, data: fallback[section], revision: 0 };
+  return content;
 }

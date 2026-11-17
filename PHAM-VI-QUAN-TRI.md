@@ -1,12 +1,13 @@
 # Phạm vi quản trị và nghiệm thu
 
-Website có một trang công khai và các popup. Danh mục gồm Tendoo, Viettel-CA, V-Contract, S-Invoice, V-BHXH và FTTH. SIM Data 5G xuất hiện trong poster và lựa chọn tư vấn. Trang /admin có sáu mục.
+Website có một trang công khai và các popup. Danh mục gồm Tendoo, Viettel-CA, V-Contract, S-Invoice, V-BHXH và FTTH. SIM Data 5G xuất hiện trong poster và lựa chọn tư vấn. Trang /admin có bảy mục.
 
 | Trang hoặc phần hiện có | Dữ liệu hay thao tác đang tĩnh | Chức năng trong admin | Cách kiểm tra |
 | --- | --- | --- | --- |
 | Liên hệ, thanh chạy, QR TAMMI, chân trang, nút gọi | Tên chuyên viên, hotline, email, địa chỉ, ảnh đại diện và QR | Liên hệ | Đổi hotline, ảnh hoặc QR rồi tải lại và kiểm tra liên kết tel/mailto cùng popup |
 | Poster và ảnh trên sáu thẻ giải pháp | Ảnh, mô tả ảnh, thứ tự poster | Ảnh & poster | Thay ảnh dịch vụ; thêm, ẩn, đổi thứ tự poster và kiểm tra nguồn ảnh điện thoại |
-| Góc khám phá | Tên, mô tả và nguồn video | Video | Đổi video của một dịch vụ rồi tải lại và chọn dịch vụ đó |
+| Góc khám phá | Tên, mô tả và nguồn video | Thêm, sửa, ẩn và sắp xếp trong Video | Thêm một video mới rồi tải lại và mở video đó |
+| Khu poster, Góc khám phá, FAQ và nội dung bổ sung | Trạng thái hiển thị và danh sách khối trước mục tư vấn | Trang khách | Thử ẩn/bật cả khu và thêm, sửa, ẩn một khối có ảnh |
 | Sáu bảng giá | Gói theo nhóm, giá/giá gốc, thời hạn, thông số riêng, thiết bị Tendoo | Thêm, sửa, ẩn, sắp xếp, lọc theo dịch vụ | Sửa giá, thêm gói, ẩn gói; kiểm tra popup và chọn Mua ngay |
 | FAQ | 5 câu hỏi và trả lời | Thêm, sửa, ẩn, sắp xếp | Tải lại, kiểm tra câu hỏi, đáp án, thứ tự |
 | Form chính và popup theo gói | Gửi thủ công qua TAMMI/email, chưa có danh sách lưu | Nhận yêu cầu, xem mã và trạng thái email, cập nhật xử lý | Thử email lỗi, bỏ trống điện thoại, giới hạn gửi, mã xác nhận, kết quả Resend |

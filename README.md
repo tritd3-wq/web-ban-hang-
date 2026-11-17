@@ -23,9 +23,11 @@ Landing page hiện có dùng HTML/CSS/JS và Vercel Functions (Node.js 22). Neo
 
 ## Nghiệm thu
 
-Trang quản trị có sáu mục gồm **Liên hệ**, **Ảnh & poster**, **Gói cước**, **Yêu cầu tư vấn**, **FAQ** và **Video**.
+Trang quản trị gồm **Liên hệ**, **Ảnh & poster**, **Gói cước**, **Yêu cầu tư vấn**, **FAQ**, **Video** và **Trang khách**.
 
-Trong mục Video, ô **Link video** nhận link YouTube, ID YouTube hoặc đường dẫn video MP4. Để trống ô này nếu muốn ẩn video của dịch vụ.
+Trong mục **Video**, có thể thêm nhiều clip, sắp xếp và bỏ chọn **Hiển thị** để ẩn. Ô **Link video** nhận link YouTube, ID YouTube hoặc đường dẫn MP4.
+
+Trong **Trang khách**, có thể bật/tắt toàn bộ khu Poster, Góc khám phá và FAQ. Khối nội dung mới gồm tiêu đề, nội dung và ảnh tùy chọn, hiển thị trước phần đăng ký tư vấn. Các tùy chỉnh mới được lưu khi xuất bản lần đầu, kể cả trên database đã khởi tạo.
 
 Dùng [bảng phạm vi và nghiệm thu](PHAM-VI-QUAN-TRI.md) để đối chiếu từng mục. Trong Gói cước, chọn dịch vụ trước khi thêm hay sắp xếp. Thứ tự áp dụng trong nhóm đang hiển thị ở bảng giá. Trong Yêu cầu tư vấn, trạng thái xử lý độc lập với kết quả gửi email. **Đã gửi** nghĩa là Resend đã nhận yêu cầu và trả ID.
 

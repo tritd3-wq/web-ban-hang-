@@ -2,6 +2,7 @@ import defaults from './site-defaults.js';
 import { byId, digits, el, lines, request } from './ui.js';
 import { setupConsult } from './solution-consult.js';
 import { pricingDialog } from './pricing.js';
+import { pageVisibilityDefaults, serviceVideos } from './site-model.js';
 
 const select = selector => document.querySelector(selector);
 const write = (selector, value) => { select(selector).textContent = value; };
@@ -166,6 +167,28 @@ function renderFaq(items) {
   }
 }
 
+function renderPageBlocks(items) {
+  if (!items.length) return;
+  const blocks = el('div', 'wrap page-blocks');
+  for (const item of items) {
+    const block = el('section', 'page-block');
+    const copy = el('div');
+    copy.append(el('h2', '', item.title), el('p', '', item.description));
+    block.append(copy);
+    if (item.image) {
+      const image = el('img');
+      image.src = item.image;
+      image.alt = item.title;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      block.classList.add('has-image');
+      block.append(image);
+    }
+    blocks.append(block);
+  }
+  byId('register').before(blocks);
+}
+
 const styleMap = {
   tendoo: ['', 'tendoo-price', 0],
   'viettel-ca': ['ca-feature', 'ca-price', 1],
@@ -218,11 +241,11 @@ function renderServices({ services, plans }, consult) {
   }
 }
 
-function renderDiscovery(services) {
+function renderDiscovery(items, services) {
   const wrap = select('.discover-options');
-  const items = services.filter(service => service.youtube || service.videoUrl);
   byId('discover').hidden = !items.length;
   if (!items.length) return;
+  const serviceById = new Map(services.map(item => [item.id, item]));
   function choose(item, index) {
     for (const [i, option] of [...wrap.children].entries()) option.setAttribute('aria-pressed', String(i === index));
     byId('discoverCategory').textContent = 'KHÁM PHÁ / ' + item.discoverTitle;
@@ -254,14 +277,15 @@ function renderDiscovery(services) {
     } else {
       const video = el('video');
       video.src = item.videoUrl;
-      video.poster = item.image;
+      const poster = serviceById.get(item.service)?.image;
+      if (poster) video.poster = poster;
       video.controls = video.playsInline = true;
       video.preload = 'none';
       video.setAttribute('aria-label', 'Video giới thiệu ' + item.videoName);
       media.replaceChildren(video);
     }
     byId('discoverConsult').onclick = () => {
-      const checkbox = [...byId('choices').querySelectorAll('input')].find(input => input.value === item.id);
+      const checkbox = [...byId('choices').querySelectorAll('input')].find(input => input.value === item.service);
       if (checkbox) checkbox.checked = true;
       byId('form').scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -271,9 +295,12 @@ function renderDiscovery(services) {
     button.type = 'button';
     const label = el('span');
     label.append(el('strong', '', String(index + 1).padStart(2, '0') + '. ' + item.discoverTitle));
-    const mark = el('span', 'discover-wordmark discover-brand-' + styleMap[item.id][2]);
-    mark.setAttribute('aria-hidden', 'true');
-    button.append(label, mark);
+    button.append(label);
+    if (item.service) {
+      const mark = el('span', 'discover-wordmark discover-brand-' + styleMap[item.service][2]);
+      mark.setAttribute('aria-hidden', 'true');
+      button.append(mark);
+    }
     button.onclick = () => choose(item, index);
     wrap.append(button);
   }
@@ -289,10 +316,22 @@ try {
     document.body.prepend(el('p', 'site-fallback', 'Chưa tải được nội dung mới nhất. Vui lòng tải lại trang hoặc liên hệ hotline.'));
   }
 }
-updateContact(content);
+const visibility = content.pageVisibility ?? pageVisibilityDefaults;
+const posters = visibility.posters ? content.banners : [];
+const faq = visibility.faq ? content.faq : [];
+const visibleServices = new Set(content.services.map(item => item.id));
+const videos = visibility.videos
+  ? (content.videos ?? serviceVideos(content.services)).filter(item => !item.service || visibleServices.has(item.service))
+  : [];
+const hiddenAnchors = new Set();
+if (!posters.length) hiddenAnchors.add('#posterTitle');
+if (!faq.length) hiddenAnchors.add('#faq');
+if (!videos.length) hiddenAnchors.add('#discover');
+updateContact({ ...content, menu: content.menu.filter(item => !hiddenAnchors.has(item.href)) });
 updateHome(content);
-renderPosters(content.banners);
-renderFaq(content.faq);
+renderPosters(posters);
+renderFaq(faq);
+renderPageBlocks(content.pageBlocks ?? []);
 const consult = setupConsult(content);
 renderServices(content, consult);
-renderDiscovery(content.services);
+renderDiscovery(videos, content.services);

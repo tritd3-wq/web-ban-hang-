@@ -4,6 +4,21 @@ export const adminFields = {
   video: ['discoverTitle', 'videoName', 'videoDescription', 'videoSource']
 };
 
+export const pageVisibilityDefaults = { posters: true, videos: true, faq: true };
+
+export function serviceVideos(services) {
+  return services.filter(item => item.youtube || item.videoUrl).map(item => ({
+    id: item.id,
+    enabled: item.enabled,
+    service: item.id,
+    discoverTitle: item.discoverTitle,
+    videoName: item.videoName,
+    videoDescription: item.videoDescription,
+    youtube: item.youtube,
+    videoUrl: item.videoUrl
+  }));
+}
+
 export const planGroups = {
   tendoo: { packages: 'Gói Tendoo', devices: 'Danh sách thiết bị' },
   'viettel-ca': { new: 'Cấp mới', renew: 'Gia hạn' },

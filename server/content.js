@@ -1,5 +1,5 @@
 import defaults from '../site-defaults.js';
-import { adminFields, emailValid, phoneValid, planGroups } from '../site-model.js';
+import { adminFields, emailValid, pageVisibilityDefaults, phoneValid, planGroups } from '../site-model.js';
 import { db } from './db.js';
 import { HttpError } from './http.js';
 
@@ -32,6 +32,15 @@ const required = {
 const urlFields = new Set(['href', 'logo', 'portrait', 'qr', 'desktop', 'mobile', 'image', 'videoUrl', 'priceSource', 'heroCtaLink', 'registerCtaLink']);
 const numericFields = new Set(['price', 'old', 'discount', 'quantity', 'domestic', 'international']);
 
+export function editableVideos(entry) {
+  return {
+    ...entry,
+    data: entry.data.map(({ youtube, videoUrl, ...item }) => ({
+      ...item, videoSource: youtube ? 'https://youtu.be/' + youtube : videoUrl
+    }))
+  };
+}
+
 function parseVideoSource(value) {
   const field = 'Link video';
   const source = link(value, field);
@@ -61,6 +70,37 @@ function parseVideoSource(value) {
 }
 
 export async function prepareAdminEdit(section, id, data) {
+  if (section === 'pageVisibility') {
+    const keys = Object.keys(pageVisibilityDefaults);
+    if (!object(data) || !keys.every(key => typeof data[key] === 'boolean')) return bad('hiển thị trang khách');
+    return { storage: section, clean: Object.fromEntries(keys.map(key => [key, data[key]])) };
+  }
+  if (section === 'pageBlocks' || section === 'videos') {
+    if (!Array.isArray(data) || data.length > 100) return bad('danh sách');
+    const ids = new Set();
+    const items = data.map(item => {
+      if (!object(item) || !validId(item.id) || typeof item.enabled !== 'boolean' || ids.has(item.id)) return bad('mục nội dung');
+      ids.add(item.id);
+      const base = { id: item.id, enabled: item.enabled };
+      if (section === 'pageBlocks') {
+        const title = text(item.title, 'tiêu đề', 160);
+        const description = text(item.description, 'nội dung');
+        const image = link(item.image, 'ảnh');
+        if (!title || !description) return bad('tiêu đề hoặc nội dung');
+        return { ...base, title, description, image };
+      }
+      const service = text(item.service, 'dịch vụ', 72);
+      const discoverTitle = text(item.discoverTitle, 'tiêu đề trong danh sách video', 160);
+      const videoName = text(item.videoName, 'tên video', 160);
+      const videoDescription = text(item.videoDescription, 'mô tả video');
+      const source = parseVideoSource(item.videoSource);
+      if ((service && !Object.hasOwn(planGroups, service)) || !discoverTitle || !videoName || !(source.youtube || source.videoUrl)) {
+        return bad('dịch vụ, tên hoặc link video');
+      }
+      return { ...base, service, discoverTitle, videoName, videoDescription, ...source };
+    });
+    return { storage: section, clean: items };
+  }
   if (['banners', 'plans', 'faq'].includes(section)) {
     return { storage: section, clean: validateSection(section, data) };
   }
@@ -78,6 +118,8 @@ export async function prepareAdminEdit(section, id, data) {
   if (!row.data.some(item => item.id === id)) throw new HttpError(404, 'Không tìm thấy dịch vụ.');
   let changes = data;
   if (section === 'video') {
+    const [managed] = await db()`SELECT 1 FROM site_content WHERE section = 'videos'`;
+    if (managed) throw new HttpError(409, 'Danh sách video đã được cập nhật. Vui lòng tải lại trang.');
     const { videoSource, ...details } = data;
     changes = { ...details, ...parseVideoSource(videoSource) };
   }

@@ -6,12 +6,14 @@ const nav = byId('adminNav');
 const host = byId('editor');
 const sections = {
   contact: 'Liên hệ', banners: 'Ảnh & poster', plans: 'Gói cước',
-  leads: 'Yêu cầu tư vấn', faq: 'FAQ', video: 'Video'
+  leads: 'Yêu cầu tư vấn', faq: 'FAQ', videos: 'Video', pageBlocks: 'Trang khách'
 };
+const pageAreas = { posters: 'Poster minh họa sản phẩm', videos: 'Góc khám phá', faq: 'FAQ' };
 const labels = {
   person: 'Tên chuyên viên', hotline: 'Hotline', email: 'Email liên hệ', address: 'Địa chỉ',
   portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', name: 'Tên gói', alt: 'Mô tả ảnh',
-  desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', description: 'Mô tả', image: 'Ảnh dịch vụ',
+  desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', title: 'Tiêu đề', description: 'Mô tả', image: 'Ảnh dịch vụ',
+  service: 'Dịch vụ liên quan',
   discoverTitle: 'Tiêu đề trong danh sách video', videoName: 'Tên video', videoDescription: 'Mô tả video',
   videoSource: 'Link video',
   group: 'Nhóm gói', price: 'Giá (VNĐ)', old: 'Giá gốc (VNĐ)', discount: 'Mức giảm (%)', term: 'Thời hạn / bảo hành',
@@ -24,7 +26,7 @@ const imageKeys = new Set(['portrait', 'qr', 'image']);
 const required = new Set(['person', 'hotline', 'email', 'address', 'portrait', 'qr', 'name',
   'alt', 'desktop', 'mobile', 'image', 'discoverTitle', 'videoName', 'price', 'vat', 'question', 'answer']);
 let content, section, draft, selected, pending = false, dirty = false, listPage = 1, planService = 'tendoo', planQuery = '';
-let imageMode = 'banners', imageService = 'tendoo', videoService = 'tendoo';
+let imageMode = 'banners', imageService = 'tendoo', pageMode = 'visibility';
 let renderSequence = 0;
 
 function fail(error) {
@@ -70,11 +72,17 @@ function selectSection(next) {
 }
 
 function inputFor(key, record) {
-  const label = el('label', longKeys.has(key) ? 'wide' : '', labels[key] || key);
+  const labelText = section === 'pageBlocks' && key === 'image' ? 'Ảnh (tùy chọn)'
+    : section === 'pageBlocks' && key === 'description' ? 'Nội dung' : labels[key];
+  const label = el('label', longKeys.has(key) ? 'wide' : '', labelText);
   let input;
   if (key === 'group') {
     input = el('select');
     for (const [id, text] of Object.entries(planGroups[record.service])) input.add(new Option(text, id));
+  } else if (key === 'service') {
+    input = el('select');
+    input.add(new Option('Video chung', ''));
+    for (const service of content.services.data) input.add(new Option(service.name, service.id));
   } else {
     input = el(longKeys.has(key) ? 'textarea' : 'input');
     if (input.tagName === 'INPUT') input.type = numberKeys.has(key) ? 'number' : key === 'email' ? 'email' : key === 'hotline' ? 'tel' : 'text';
@@ -87,6 +95,9 @@ function inputFor(key, record) {
   input.name = key;
   input.value = record[key] ?? '';
   input.required = required.has(key) || record.service === 'ftth' && (key === 'domestic' || key === 'international');
+  if (section === 'pageBlocks') input.required = key !== 'image';
+  if (section === 'videos' && key === 'videoSource') input.required = true;
+  if (['title', 'videoName', 'discoverTitle'].includes(key)) input.maxLength = 160;
   label.append(input);
   return label;
 }
@@ -207,6 +218,7 @@ function fieldsFor(record, form) {
   form.append(grid);
   for (const key of Object.keys(labels)) {
     if (!Object.hasOwn(record, key)) continue;
+    if (key === 'service' && section !== 'videos') continue;
     if (['domestic', 'international', 'option'].includes(key) && record.service !== 'ftth') continue;
     grid.append(inputFor(key, record));
     if (imageKeys.has(key)) grid.append(uploadControl([key], form));
@@ -245,7 +257,9 @@ function newRecord() {
     banners: { desktop: '', mobile: '', alt: '' },
     plans: { service: '', group: '', name: '', description: '', details: '', term: '', price: null, vat: '', old: null, discount: null,
       quantity: null, domestic: null, international: null, option: '' },
-    faq: { question: '', answer: '' }
+    faq: { question: '', answer: '' },
+    videos: { discoverTitle: '', videoName: '', videoDescription: '', videoSource: '', service: '' },
+    pageBlocks: { title: '', description: '', image: '' }
   })[section]);
   const record = { id: crypto.randomUUID(), enabled: true };
   for (const key of keys.filter(key => !['id', 'enabled'].includes(key))) record[key] = numberKeys.has(key) ? null : '';
@@ -328,7 +342,7 @@ function listEditor(panel) {
       const index = siblings.indexOf(item);
       const row = el('div', 'item-row');
       const info = el('div');
-      const name = item.name || item.alt || item.question;
+      const name = item.name || item.alt || item.question || item.title || item.discoverTitle;
       info.append(el('strong', '', name));
       if (section === 'plans') info.append(el('small', '', cash(item.price) + ' · ' + planGroups[item.service][item.group]));
       const controls = el('div', 'row-actions');
@@ -430,9 +444,6 @@ async function leadEditor(panel, sequence) {
 
 function recordEditor(panel, action, record) {
   const fields = Object.fromEntries(adminFields[action].map(key => [key, record[key]]));
-  if (action === 'video') {
-    fields.videoSource = record.youtube ? 'https://youtu.be/' + record.youtube : record.videoUrl;
-  }
   const form = fieldsFor(fields, el('form'));
   const savebar = el('div', 'savebar');
   const submit = el('button', '', 'Lưu và xuất bản');
@@ -469,10 +480,33 @@ function pick(panel, label, choices, value, onChange) {
 function serviceEditor(panel, action, id, onChange) {
   const services = content.services.data;
   pick(panel, 'Dịch vụ', services.map(item => [item.id, item.name]), id, onChange);
-  if (action === 'video') {
-    panel.append(el('p', 'upload-note', 'Dán link hoặc ID YouTube, hoặc đường dẫn MP4. Để trống để ẩn video.'));
-  }
   recordEditor(panel, action, services.find(item => item.id === id));
+}
+
+function pageVisibilityEditor(panel) {
+  const form = el('form');
+  const fields = el('div', 'fields');
+  for (const [key, name] of Object.entries(pageAreas)) {
+    const label = el('label', 'checkbox', 'Hiển thị ' + name);
+    const input = el('input');
+    input.type = 'checkbox';
+    input.name = key;
+    input.checked = content.pageVisibility.data[key];
+    label.prepend(input);
+    fields.append(label);
+  }
+  const savebar = el('div', 'savebar');
+  const submit = el('button', '', 'Lưu và xuất bản');
+  submit.type = 'submit';
+  savebar.append(submit);
+  form.append(fields, savebar);
+  form.onchange = markDirty;
+  form.onsubmit = event => {
+    event.preventDefault();
+    const data = Object.fromEntries(Object.keys(pageAreas).map(key => [key, form.elements.namedItem(key).checked]));
+    save(data, submit, 'pageVisibility');
+  };
+  panel.append(form);
 }
 
 function render() {
@@ -481,7 +515,17 @@ function render() {
   host.replaceChildren(panel);
   if (section === 'leads') return leadEditor(panel, sequence);
   if (section === 'contact') return recordEditor(panel, 'contact', draft);
-  if (section === 'video') return serviceEditor(panel, 'video', videoService, value => { videoService = value; });
+  if (section === 'videos') {
+    panel.append(el('p', 'upload-note', 'Dán link hoặc ID YouTube, hoặc đường dẫn MP4. Bỏ chọn Hiển thị để ẩn video.'));
+  }
+  if (section === 'pageBlocks') {
+    pick(panel, 'Quản lý trang khách', [['visibility', 'Ẩn/hiện khu vực'], ['blocks', 'Khối nội dung']], pageMode, value => {
+      pageMode = value;
+      draft = structuredClone(content.pageBlocks.data);
+    });
+    if (pageMode === 'visibility') return pageVisibilityEditor(panel);
+    panel.append(el('p', 'upload-note', 'Các khối hiển thị ngay trước phần đăng ký tư vấn.'));
+  }
   if (section === 'banners') {
     pick(panel, 'Loại ảnh', [['banners', 'Poster'], ['services', 'Ảnh minh họa dịch vụ']], imageMode, value => {
       imageMode = value;
