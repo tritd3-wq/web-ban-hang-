@@ -29,7 +29,7 @@ Trong mục **Video**, có thể thêm nhiều clip, sắp xếp và bỏ chọn
 
 Trong **Trang khách**, có thể bật/tắt toàn bộ khu Poster, Góc khám phá và FAQ. Khối nội dung mới gồm tiêu đề, nội dung và ảnh tùy chọn, hiển thị trước phần đăng ký tư vấn. Các tùy chỉnh mới được lưu khi xuất bản lần đầu, kể cả trên database đã khởi tạo.
 
-Trong **Liên hệ**, ô **Nội dung chữ chạy** là phần chữ đứng sau tên đơn vị, địa chỉ và hotline tự lấy từ thông tin liên hệ. Trong các danh sách nội dung, **Xóa** loại mục khỏi danh sách sau khi bấm **Lưu và xuất bản**. Bỏ chọn **Hiển thị** để ẩn và có thể bật lại sau.
+Trong **Liên hệ**, chọn file để thay ảnh đại diện. Ô **Nội dung chữ chạy** là phần chữ đứng sau tên đơn vị, địa chỉ và hotline tự lấy từ thông tin liên hệ. Trong các danh sách nội dung, **Xóa** loại mục khỏi danh sách sau khi bấm **Lưu và xuất bản**. Bỏ chọn **Hiển thị** để ẩn và có thể bật lại sau.
 
 Dùng [bảng phạm vi và nghiệm thu](PHAM-VI-QUAN-TRI.md) để đối chiếu từng mục. Trong Gói cước, chọn dịch vụ trước khi thêm hay sắp xếp. Thứ tự áp dụng trong nhóm đang hiển thị ở bảng giá. Trong Yêu cầu tư vấn, trạng thái xử lý độc lập với kết quả gửi email. **Đã gửi** nghĩa là Resend đã nhận yêu cầu và trả ID.
 

@@ -11,7 +11,7 @@ const sections = {
 const pageAreas = { posters: 'Poster minh họa sản phẩm', videos: 'Góc khám phá', faq: 'FAQ' };
 const labels = {
   person: 'Tên chuyên viên', hotline: 'Hotline', email: 'Email liên hệ', address: 'Địa chỉ',
-  qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', alt: 'Mô tả ảnh',
+  portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', alt: 'Mô tả ảnh',
   desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', title: 'Tiêu đề', description: 'Mô tả', image: 'Ảnh dịch vụ',
   service: 'Dịch vụ liên quan',
   discoverTitle: 'Tiêu đề trong danh sách video', videoName: 'Tên video', videoDescription: 'Mô tả video',
@@ -143,15 +143,16 @@ async function prepareUploadImages(file, banner) {
 function uploadControl(keys, form) {
   const area = el('div', 'wide');
   const line = el('div', 'upload-box');
+  const imageLabel = labels[keys[0]].replace(/^Ảnh/, 'ảnh');
   const file = el('input');
   file.type = 'file';
   file.accept = 'image/jpeg,image/png,image/webp';
-  file.setAttribute('aria-label', keys.length === 2 ? 'Chọn ảnh poster' : 'Chọn ảnh ' + labels[keys[0]]);
+  file.setAttribute('aria-label', keys.length === 2 ? 'Chọn ảnh poster' : 'Chọn ' + imageLabel);
   file.onchange = () => {
     file.setCustomValidity(file.files.length ? 'Bấm Tải ảnh lên trước khi lưu và xuất bản.' : '');
   };
   const img = el('img');
-  img.alt = 'Xem trước ảnh ' + labels[keys[0]];
+  img.alt = 'Xem trước ' + imageLabel;
   const refresh = () => {
     const value = form.elements.namedItem(keys[0]).value;
     img.hidden = !value;
@@ -226,6 +227,17 @@ function fieldsFor(record, form) {
     if (!Object.hasOwn(record, key)) continue;
     if (key === 'service' && section !== 'videos') continue;
     if (['domestic', 'international', 'option'].includes(key) && record.service !== 'ftth') continue;
+    if (key === 'portrait') {
+      const value = el('input');
+      value.type = 'hidden';
+      value.name = key;
+      value.value = record[key];
+      grid.append(value);
+      const uploader = uploadControl([key], form);
+      uploader.prepend(el('strong', '', labels[key]));
+      grid.append(uploader);
+      continue;
+    }
     grid.append(inputFor(key, record));
     if (imageKeys.has(key)) grid.append(uploadControl([key], form));
   }
