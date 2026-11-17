@@ -1,5 +1,5 @@
 export const adminFields = {
-  contact: ['person', 'hotline', 'email', 'address', 'portrait', 'qr'],
+  contact: ['person', 'hotline', 'email', 'address', 'qr', 'ticker'],
   'service-image': ['image', 'alt'],
   video: ['discoverTitle', 'videoName', 'videoDescription', 'videoSource']
 };

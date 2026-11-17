@@ -11,7 +11,7 @@ const sections = {
 const pageAreas = { posters: 'Poster minh họa sản phẩm', videos: 'Góc khám phá', faq: 'FAQ' };
 const labels = {
   person: 'Tên chuyên viên', hotline: 'Hotline', email: 'Email liên hệ', address: 'Địa chỉ',
-  portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', name: 'Tên gói', alt: 'Mô tả ảnh',
+  qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', alt: 'Mô tả ảnh',
   desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', title: 'Tiêu đề', description: 'Mô tả', image: 'Ảnh dịch vụ',
   service: 'Dịch vụ liên quan',
   discoverTitle: 'Tiêu đề trong danh sách video', videoName: 'Tên video', videoDescription: 'Mô tả video',
@@ -21,9 +21,9 @@ const labels = {
   international: 'Quốc tế tối thiểu (Mbps)', option: 'Loại IP / số Mesh Wi-Fi', question: 'Câu hỏi', answer: 'Câu trả lời'
 };
 const numberKeys = new Set(['price', 'old', 'discount', 'quantity', 'domestic', 'international']);
-const longKeys = new Set(['description', 'videoDescription', 'details', 'answer']);
-const imageKeys = new Set(['portrait', 'qr', 'image']);
-const required = new Set(['person', 'hotline', 'email', 'address', 'portrait', 'qr', 'name',
+const longKeys = new Set(['description', 'videoDescription', 'details', 'answer', 'ticker']);
+const imageKeys = new Set(['qr', 'image']);
+const required = new Set(['person', 'hotline', 'email', 'address', 'qr', 'name',
   'alt', 'desktop', 'mobile', 'image', 'discoverTitle', 'videoName', 'price', 'vat', 'question', 'answer']);
 let content, section, draft, selected, pending = false, dirty = false, listPage = 1, planService = 'tendoo', planQuery = '';
 let imageMode = 'banners', imageService = 'tendoo', pageMode = 'visibility';
@@ -99,6 +99,12 @@ function inputFor(key, record) {
   if (section === 'videos' && key === 'videoSource') input.required = true;
   if (['title', 'videoName', 'discoverTitle'].includes(key)) input.maxLength = 160;
   label.append(input);
+  if (key === 'ticker') {
+    const hint = el('span', 'upload-note', 'Tên đơn vị, địa chỉ và hotline luôn lấy tự động từ thông tin liên hệ.');
+    hint.id = 'ticker-hint';
+    input.setAttribute('aria-describedby', hint.id);
+    label.append(hint);
+  }
   return label;
 }
 
@@ -365,6 +371,16 @@ function listEditor(panel) {
         host.querySelector('.item-editor input')?.focus();
       }, true);
       edit.disabled = Boolean(selected);
+      const remove = button('Xóa', () => {
+        if (!canEdit() || !confirm('Xóa mục “' + name + '” khi lưu và xuất bản?')) return;
+        draft = draft.filter(entry => entry.id !== item.id);
+        fillList();
+        dirty = true;
+        report('Đã đánh dấu xóa. Bấm lưu để xuất bản.');
+      }, true);
+      remove.classList.add('delete-item');
+      remove.disabled = Boolean(selected);
+      remove.setAttribute('aria-label', 'Xóa ' + name);
       const moves = [-1, 1].map(direction => {
         const move = button(direction === -1 ? '↑' : '↓', () => {
           if (!canEdit()) return;
@@ -377,7 +393,7 @@ function listEditor(panel) {
         move.setAttribute('aria-label', (direction === -1 ? 'Đưa lên ' : 'Đưa xuống ') + name);
         return move;
       });
-      controls.append(toggle, edit, ...moves);
+      controls.append(toggle, edit, ...moves, remove);
       row.append(info, controls);
       list.append(row);
     }

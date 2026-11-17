@@ -4,7 +4,7 @@ Website có một trang công khai và các popup. Danh mục gồm Tendoo, Viet
 
 | Trang hoặc phần hiện có | Dữ liệu hay thao tác đang tĩnh | Chức năng trong admin | Cách kiểm tra |
 | --- | --- | --- | --- |
-| Liên hệ, thanh chạy, QR TAMMI, chân trang, nút gọi | Tên chuyên viên, hotline, email, địa chỉ, ảnh đại diện và QR | Liên hệ | Đổi hotline, ảnh hoặc QR rồi tải lại và kiểm tra liên kết tel/mailto cùng popup |
+| Liên hệ, thanh chạy, QR TAMMI, chân trang, nút gọi | Tên chuyên viên, hotline, email, địa chỉ, chữ chạy và QR | Liên hệ | Đổi hotline, nội dung chữ chạy hoặc QR rồi tải lại và kiểm tra thanh chạy, liên kết tel/mailto cùng popup |
 | Poster và ảnh trên sáu thẻ giải pháp | Ảnh, mô tả ảnh, thứ tự poster | Ảnh & poster | Thay ảnh dịch vụ; thêm, ẩn, đổi thứ tự poster và kiểm tra nguồn ảnh điện thoại |
 | Góc khám phá | Tên, mô tả và nguồn video | Thêm, sửa, ẩn và sắp xếp trong Video | Thêm một video mới rồi tải lại và mở video đó |
 | Khu poster, Góc khám phá, FAQ và nội dung bổ sung | Trạng thái hiển thị và danh sách khối trước mục tư vấn | Trang khách | Thử ẩn/bật cả khu và thêm, sửa, ẩn một khối có ảnh |
