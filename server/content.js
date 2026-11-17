@@ -110,10 +110,10 @@ export async function prepareAdminEdit(section, id, data) {
     return bad('dữ liệu cần sửa');
   }
 
-  const storage = section === 'contact' ? 'contact' : 'services';
+  const storage = section === 'hero' ? 'home' : section === 'contact' ? 'contact' : 'services';
   const [row] = await db()`SELECT data FROM site_content WHERE section = ${storage}`;
   if (!row) throw new Error('Run npm run db:init');
-  if (storage === 'contact') return { storage, clean: validateSection(storage, { ...row.data, ...data }) };
+  if (storage === 'contact' || storage === 'home') return { storage, clean: validateSection(storage, { ...row.data, ...data }) };
 
   if (!row.data.some(item => item.id === id)) throw new HttpError(404, 'Không tìm thấy dịch vụ.');
   let changes = data;

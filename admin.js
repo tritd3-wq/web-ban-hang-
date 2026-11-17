@@ -12,6 +12,8 @@ const pageAreas = { posters: 'Poster minh họa sản phẩm', videos: 'Góc kh�
 const labels = {
   person: 'Tên chuyên viên', hotline: 'Hotline', email: 'Email liên hệ', address: 'Địa chỉ',
   portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', alt: 'Mô tả ảnh',
+  heroEyebrow: 'Dòng giới thiệu phía trên tiêu đề', heroTitle: 'Tiêu đề chính',
+  heroAccent: 'Dòng tiêu đề nhấn màu đỏ', heroIntro: 'Đoạn giới thiệu',
   desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', title: 'Tiêu đề', description: 'Mô tả', image: 'Ảnh dịch vụ',
   service: 'Dịch vụ liên quan',
   discoverTitle: 'Tiêu đề trong danh sách video', videoName: 'Tên video', videoDescription: 'Mô tả video',
@@ -21,10 +23,10 @@ const labels = {
   international: 'Quốc tế tối thiểu (Mbps)', option: 'Loại IP / số Mesh Wi-Fi', question: 'Câu hỏi', answer: 'Câu trả lời'
 };
 const numberKeys = new Set(['price', 'old', 'discount', 'quantity', 'domestic', 'international']);
-const longKeys = new Set(['description', 'videoDescription', 'details', 'answer', 'ticker']);
+const longKeys = new Set(['description', 'videoDescription', 'details', 'answer', 'ticker', 'heroIntro']);
 const imageKeys = new Set(['qr', 'image']);
 const required = new Set(['person', 'hotline', 'email', 'address', 'qr', 'name',
-  'alt', 'desktop', 'mobile', 'image', 'discoverTitle', 'videoName', 'price', 'vat', 'question', 'answer']);
+  'alt', 'desktop', 'mobile', 'image', 'discoverTitle', 'videoName', 'price', 'vat', 'question', 'answer', 'heroTitle']);
 let content, section, draft, selected, pending = false, dirty = false, listPage = 1, planService = 'tendoo', planQuery = '';
 let imageMode = 'banners', imageService = 'tendoo', pageMode = 'visibility';
 let renderSequence = 0;
@@ -255,7 +257,7 @@ function valuesFrom(record, form) {
 
 async function save(data, control, action = section, id) {
   if (pending) return;
-  const storage = id ? 'services' : action;
+  const storage = action === 'hero' ? 'home' : id ? 'services' : action;
   pending = control.disabled = true;
   report('Đang lưu…');
   try {
@@ -547,11 +549,12 @@ function render() {
     panel.append(el('p', 'upload-note', 'Dán link hoặc ID YouTube, hoặc đường dẫn MP4. Bỏ chọn Hiển thị để ẩn video.'));
   }
   if (section === 'pageBlocks') {
-    pick(panel, 'Quản lý trang khách', [['visibility', 'Ẩn/hiện khu vực'], ['blocks', 'Khối nội dung']], pageMode, value => {
+    pick(panel, 'Quản lý trang khách', [['visibility', 'Ẩn/hiện khu vực'], ['hero', 'Nội dung đầu trang'], ['blocks', 'Khối nội dung']], pageMode, value => {
       pageMode = value;
       draft = structuredClone(content.pageBlocks.data);
     });
     if (pageMode === 'visibility') return pageVisibilityEditor(panel);
+    if (pageMode === 'hero') return recordEditor(panel, 'hero', content.home.data);
     panel.append(el('p', 'upload-note', 'Các khối hiển thị ngay trước phần đăng ký tư vấn.'));
   }
   if (section === 'banners') {
