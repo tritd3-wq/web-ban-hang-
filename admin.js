@@ -5,13 +5,13 @@ import { report } from './admin-toast.js';
 const nav = byId('adminNav');
 const host = byId('editor');
 const sections = {
-  contact: 'Liên hệ', banners: 'Ảnh & poster', plans: 'Gói cước',
+  contact: 'Liên hệ', banners: 'Ảnh & poster', plans: 'Gói cước', customServices: 'Dịch vụ',
   leads: 'Yêu cầu tư vấn', faq: 'FAQ', videos: 'Video', pageBlocks: 'Trang khách'
 };
 const pageAreas = { posters: 'Poster minh họa sản phẩm', videos: 'Góc khám phá', faq: 'FAQ' };
 const labels = {
   person: 'Tên chuyên viên', hotline: 'Hotline', email: 'Email liên hệ', address: 'Địa chỉ',
-  portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', alt: 'Mô tả ảnh',
+  portrait: 'Ảnh đại diện', qr: 'Ảnh QR TAMMI', ticker: 'Nội dung chữ chạy', name: 'Tên gói', slug: 'Đường dẫn trang (để trống để tự tạo)', alt: 'Mô tả ảnh',
   heroEyebrow: 'Dòng giới thiệu phía trên tiêu đề', heroTitle: 'Tiêu đề chính',
   heroAccent: 'Dòng tiêu đề nhấn màu đỏ', heroIntro: 'Đoạn giới thiệu',
   desktop: 'Ảnh máy tính', mobile: 'Ảnh điện thoại', title: 'Tiêu đề', description: 'Mô tả', image: 'Ảnh dịch vụ',
@@ -74,7 +74,8 @@ function selectSection(next) {
 }
 
 function inputFor(key, record) {
-  const labelText = section === 'pageBlocks' && key === 'image' ? 'Ảnh (tùy chọn)'
+  const labelText = section === 'customServices' && key === 'name' ? 'Tên dịch vụ'
+    : section === 'pageBlocks' && key === 'image' ? 'Ảnh (tùy chọn)'
     : section === 'pageBlocks' && key === 'description' ? 'Nội dung' : labels[key];
   const label = el('label', longKeys.has(key) ? 'wide' : '', labelText);
   let input;
@@ -98,6 +99,7 @@ function inputFor(key, record) {
   input.value = record[key] ?? '';
   input.required = required.has(key) || record.service === 'ftth' && (key === 'domestic' || key === 'international');
   if (section === 'pageBlocks') input.required = key !== 'image';
+  if (section === 'customServices') input.required = key === 'name';
   if (section === 'videos' && key === 'videoSource') input.required = true;
   if (['title', 'videoName', 'discoverTitle'].includes(key)) input.maxLength = 160;
   label.append(input);
@@ -279,9 +281,10 @@ function newRecord() {
       quantity: null, domestic: null, international: null, option: '' },
     faq: { question: '', answer: '' },
     videos: { discoverTitle: '', videoName: '', videoDescription: '', videoSource: '', service: '' },
-    pageBlocks: { title: '', description: '', image: '' }
+    pageBlocks: { title: '', description: '', image: '' },
+    customServices: { name: '', slug: '', description: '', image: '' }
   })[section]);
-  const record = { id: crypto.randomUUID(), enabled: true };
+  const record = { id: (section === 'customServices' ? 'dich-vu-' : '') + crypto.randomUUID(), enabled: true };
   for (const key of keys.filter(key => !['id', 'enabled'].includes(key))) record[key] = numberKeys.has(key) ? null : '';
   if (section === 'plans') {
     record.service = planService;
@@ -364,6 +367,7 @@ function listEditor(panel) {
       const info = el('div');
       const name = item.name || item.alt || item.question || item.title || item.discoverTitle;
       info.append(el('strong', '', name));
+      if (section === 'customServices') info.append(el('small', '', '/dich-vu/' + item.slug));
       if (section === 'plans') info.append(el('small', '', cash(item.price) + ' · ' + planGroups[item.service][item.group]));
       const controls = el('div', 'row-actions');
       const toggle = el('label', 'checkbox', 'Hiển thị');
@@ -545,6 +549,9 @@ function render() {
   host.replaceChildren(panel);
   if (section === 'leads') return leadEditor(panel, sequence);
   if (section === 'contact') return recordEditor(panel, 'contact', draft);
+  if (section === 'customServices') {
+    panel.append(el('p', 'upload-note', 'Thêm dịch vụ để hiển thị trang chi tiết và nhận yêu cầu tư vấn.'));
+  }
   if (section === 'videos') {
     panel.append(el('p', 'upload-note', 'Dán link hoặc ID YouTube, hoặc đường dẫn MP4. Bỏ chọn Hiển thị để ẩn video.'));
   }

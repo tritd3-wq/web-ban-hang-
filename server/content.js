@@ -69,19 +69,30 @@ function parseVideoSource(value) {
   return { youtube: id, videoUrl: '' };
 }
 
+function serviceSlug(value) {
+  return value.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+}
+
 export async function prepareAdminEdit(section, id, data) {
   if (section === 'pageVisibility') {
     const keys = Object.keys(pageVisibilityDefaults);
     if (!object(data) || !keys.every(key => typeof data[key] === 'boolean')) return bad('hiển thị trang khách');
     return { storage: section, clean: Object.fromEntries(keys.map(key => [key, data[key]])) };
   }
-  if (section === 'pageBlocks' || section === 'videos') {
+  if (section === 'pageBlocks' || section === 'videos' || section === 'customServices') {
     if (!Array.isArray(data) || data.length > 100) return bad('danh sách');
     const ids = new Set();
     const items = data.map(item => {
       if (!object(item) || !validId(item.id) || typeof item.enabled !== 'boolean' || ids.has(item.id)) return bad('mục nội dung');
       ids.add(item.id);
       const base = { id: item.id, enabled: item.enabled };
+      if (section === 'customServices') {
+        const name = text(item.name, 'tên dịch vụ', 160);
+        if (!name || !item.id.startsWith('dich-vu-')) return bad('tên hoặc mã dịch vụ');
+        const slug = serviceSlug(text(item.slug ?? '', 'đường dẫn', 500) || name) || item.id;
+        return { ...base, name, slug, description: text(item.description ?? '', 'mô tả'), image: link(item.image ?? '', 'ảnh') };
+      }
       if (section === 'pageBlocks') {
         const title = text(item.title, 'tiêu đề', 160);
         const description = text(item.description, 'nội dung');
@@ -99,6 +110,9 @@ export async function prepareAdminEdit(section, id, data) {
       }
       return { ...base, service, discoverTitle, videoName, videoDescription, ...source };
     });
+    if (section === 'customServices' && new Set(items.map(item => item.slug)).size !== items.length) {
+      throw new HttpError(400, 'Đường dẫn dịch vụ đã được sử dụng. Hãy nhập đường dẫn khác.');
+    }
     return { storage: section, clean: items };
   }
   if (['banners', 'plans', 'faq'].includes(section)) {

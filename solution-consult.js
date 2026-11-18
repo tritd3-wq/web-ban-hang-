@@ -2,7 +2,7 @@ import { byId, cash, digits, el, openDialog, sendJson } from './ui.js';
 import { emailValid, phoneValid } from './site-model.js';
 
 export function setupConsult(content) {
-  const { contact, home, services, interests } = content;
+  const { contact, home, services, customServices = [], interests } = content;
   const main = byId('form');
   const confirmation = byId('success');
   const popup = el('dialog');
@@ -32,12 +32,14 @@ export function setupConsult(content) {
   popup.querySelector('.sc-close').onclick = () => popup.close();
   let selection;
 
-  for (const item of [...services, ...interests]) {
+  const requested = new URLSearchParams(location.search).get('dich-vu');
+  for (const item of [...services, ...customServices, ...interests]) {
     const label = el('label', 'check');
     const input = el('input');
     input.type = 'checkbox';
     input.name = 'products';
     input.value = item.id;
+    input.checked = item.id === requested;
     label.append(input, el('span', '', item.name));
     byId('choices').append(label);
   }

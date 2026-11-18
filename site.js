@@ -68,7 +68,7 @@ function updateContact({ contact, home, menu }) {
     'Hotline ' + contact.hotline, contact.ticker].filter(Boolean).join('. '));
 }
 
-function updateHome({ home, contact, services }) {
+function updateHome({ home, contact, services, customServices = [] }) {
   document.title = home.pageTitle;
   select('meta[name=description]').content = home.metaDescription.replaceAll('{hotline}', contact.hotline);
   write('.hero .eyebrow', home.heroEyebrow);
@@ -76,7 +76,7 @@ function updateHome({ home, contact, services }) {
   title.replaceChildren(home.heroTitle, el('br'), el('em', '', home.heroAccent));
   write('.hero .lead', home.heroIntro);
   const [first, second, third] = select('.hero .mini').children;
-  first.querySelector('b').textContent = String(services.length).padStart(2, '0');
+  first.querySelector('b').textContent = String(services.length + customServices.length).padStart(2, '0');
   second.replaceChildren(el('b', '', home.miniMiddle), home.miniMiddleText);
   third.replaceChildren(el('b', '', home.miniLast), home.miniLastText);
 
@@ -198,7 +198,7 @@ const styleMap = {
   ftth: ['', 'ftth-price', 5]
 };
 
-function renderServices({ services, plans }, consult) {
+function renderServices({ services, plans, customServices = [] }, consult) {
   const cards = byId('cards');
   for (const [index, service] of services.entries()) {
     const [variant, priceClass] = styleMap[service.id];
@@ -236,6 +236,29 @@ function renderServices({ services, plans }, consult) {
     register.type = 'button';
     register.onclick = () => consult(service);
     actions.append(price, register);
+    card.append(actions);
+    cards.lastElementChild.append(card);
+  }
+  for (const [index, service] of customServices.entries()) {
+    if ((services.length + index) % 2 === 0) cards.append(el('div', 'service-pair'));
+    const card = el('article', 'card');
+    card.id = service.id;
+    card.append(el('h3', '', service.name));
+    if (service.description) card.append(el('p', '', service.description));
+    if (service.image) {
+      const image = el('img', 'solution-image');
+      image.src = service.image;
+      image.alt = service.name;
+      image.loading = 'lazy';
+      card.append(image);
+    }
+    const actions = el('div', 'tendoo-actions');
+    const details = el('a', '', 'Xem chi tiết');
+    details.href = '/dich-vu/' + encodeURIComponent(service.slug);
+    const register = el('button', 'tendoo-consult', 'Tôi muốn được tư vấn');
+    register.type = 'button';
+    register.onclick = () => consult(service);
+    actions.append(details, register);
     card.append(actions);
     cards.lastElementChild.append(card);
   }

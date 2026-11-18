@@ -21,8 +21,8 @@ export default route(async (req, res) => {
     return json(res, 200, { ok: true });
   }
   if (req.method === 'GET' && !action) {
-    const { contact, home, banners, services, plans, faq, pageVisibility, pageBlocks, videos } = await allContent();
-    return json(res, 200, { contact, home, banners, services, plans, faq, pageVisibility, pageBlocks, videos: editableVideos(videos) });
+    const { contact, home, banners, services, plans, faq, pageVisibility, pageBlocks, customServices, videos } = await allContent();
+    return json(res, 200, { contact, home, banners, services, plans, faq, pageVisibility, pageBlocks, customServices, videos: editableVideos(videos) });
   }
   if (req.method === 'PUT' && !action) {
     const { section, id, data, revision } = await body(req, 1_000_000);

@@ -3,7 +3,10 @@
   "framework": null,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/admin", "destination": "/api/admin-page" }],
+  "rewrites": [
+    { "source": "/admin", "destination": "/api/admin-page" },
+    { "source": "/dich-vu/:slug", "destination": "/api/service-page?slug=:slug" }
+  ],
   "headers": [
     { "source": "/(.*)", "headers": [
       { "key": "X-Content-Type-Options", "value": "nosniff" },

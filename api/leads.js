@@ -33,7 +33,7 @@ export default route(async (req, res) => {
   await limit('lead-ip:' + clientIp(req), 8, 600);
   await limit('lead-email:' + email, 3, 600);
   const content = await allContent();
-  const interests = new Map([...content.services.data, ...content.interests.data]
+  const interests = new Map([...content.services.data, ...content.customServices.data, ...content.interests.data]
     .filter(item => item.enabled).map(item => [item.id, item.name]));
   const plan = planId ? content.plans.data.find(item => item.enabled && item.id === planId && interests.has(item.service)) : null;
   if (planId && !plan) throw new HttpError(400, 'Gói đã thay đổi. Vui lòng tải lại trang và chọn lại.');

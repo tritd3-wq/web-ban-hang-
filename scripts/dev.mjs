@@ -6,6 +6,7 @@ import admin from '../api/admin.js';
 import adminPage from '../api/admin-page.js';
 import content from '../api/content.js';
 import leads from '../api/leads.js';
+import servicePage from '../api/service-page.js';
 
 const root = resolve('dist');
 const types = {
@@ -14,12 +15,12 @@ const types = {
 };
 const handlers = new Map([
   ['/admin', adminPage], ['/api/admin-page', adminPage], ['/api/admin', admin],
-  ['/api/content', content], ['/api/leads', leads]
+  ['/api/content', content], ['/api/leads', leads], ['/api/service-page', servicePage]
 ]);
 const server = createServer(async (req, res) => {
   try {
     const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    const handler = handlers.get(pathname);
+    const handler = handlers.get(pathname) || (/^\/dich-vu\/[a-z0-9-]+\/?$/.test(pathname) ? servicePage : undefined);
     if (handler) return await handler(req, res);
     const file = resolve(root, '.' + (pathname === '/' ? '/index.html' : pathname));
     if (!file.startsWith(root + sep)) throw new Error('Invalid path');

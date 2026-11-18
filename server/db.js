@@ -3,7 +3,7 @@ import defaults from '../site-defaults.js';
 import { pageVisibilityDefaults, serviceVideos } from '../site-model.js';
 
 let client;
-export const optionalSections = ['pageVisibility', 'pageBlocks', 'videos'];
+export const optionalSections = ['pageVisibility', 'pageBlocks', 'videos', 'customServices'];
 export function db() {
   if (!process.env.DATABASE_URL) throw new Error('Missing DATABASE_URL');
   client ??= neon(process.env.DATABASE_URL);
@@ -46,6 +46,7 @@ export async function allContent() {
   const fallback = {
     pageVisibility: pageVisibilityDefaults,
     pageBlocks: [],
+    customServices: [],
     videos: serviceVideos(content.services.data)
   };
   for (const section of optionalSections) content[section] ??= { section, data: fallback[section], revision: 0 };
